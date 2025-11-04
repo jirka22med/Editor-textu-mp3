@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Star Trek MP3 Lyrics Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #fbbf24;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header-lcars {
+            margin-bottom: 30px;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+
+        .lcars-badge {
+            background: #fbbf24;
+            color: #000;
+            padding: 10px 30px;
+            border-radius: 0 50px 50px 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .lcars-bar {
+            flex: 1;
+            height: 50px;
+            background: linear-gradient(to right, #9333ea, #3b82f6, #22d3ee);
+            border-radius: 50px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #22d3ee;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #fde047;
+            font-size: 0.9em;
+        }
+
+        .upload-zone {
+            max-width: 800px;
+            margin: 0 auto 40px;
+            border: 4px dashed #22d3ee;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-zone:hover {
+            background: rgba(34, 211, 238, 0.1);
+            border-color: #fbbf24;
+        }
+
+        .upload-zone.hidden {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .main-container.hidden {
+            display: none;
+        }
+
+        .player-panel {
+            background: linear-gradient(135deg, #581c87, #1e3a8a);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #22d3ee;
+            box-shadow: 0 0 30px rgba(34, 211, 238, 0.3);
+        }
+
+        .editor-panel {
+            background: linear-gradient(135deg, #1e3a8a, #0e7490);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid #fbbf24;
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid currentColor;
+        }
+
+        .player-panel .panel-header {
+            color: #22d3ee;
+        }
+
+        .editor-panel .panel-header {
+            color: #fbbf24;
+            justify-content: space-between;
+        }
+
+        .metadata {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+
+        .metadata p {
+            margin: 5px 0;
+        }
+
+        .metadata .title {
+            color: #fde047;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .metadata .artist {
+            color: #bae6fd;
+        }
+
+        .metadata .album {
+            color: #d8b4fe;
+        }
+
+        .metadata .info {
+            color: #93c5fd;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .play-btn {
+            background: #22d3ee;
+            color: #000;
+            border: none;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            font-size: 2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px #22d3ee;
+        }
+
+        .play-btn:hover {
+            background: #06b6d4;
+            transform: scale(1.1);
+        }
+
+        .timeline {
+            margin-top: 20px;
+        }
+
+        .timeline input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+            background: #1e3a8a;
+        }
+
+        .timeline input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #22d3ee;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #22d3ee;
+        }
+
+        .timeline input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: #22d3ee;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #22d3ee;
+            border: none;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            color: #22d3ee;
+            font-size: 0.9em;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-upload {
+            background: #9333ea;
+            color: #fff;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn-upload:hover {
+            background: #7e22ce;
+        }
+
+        .btn-save {
+            background: #16a34a;
+            color: #fff;
+        }
+
+        .btn-save:hover {
+            background: #15803d;
+        }
+
+        .btn-download {
+            background: #2563eb;
+            color: #fff;
+        }
+
+        .btn-download:hover {
+            background: #1d4ed8;
+        }
+
+        .editor-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        textarea {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            color: #22d3ee;
+            border: 2px solid #0891b2;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            resize: none;
+            min-height: 400px;
+            margin-bottom: 20px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #fbbf24;
+        }
+
+        .instructions {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid #fbbf24;
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.85em;
+        }
+
+        .instructions strong {
+            color: #fde047;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .instructions ul {
+            color: #fde047;
+            margin-left: 20px;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+
+        .footer-lcars {
+            margin-top: 30px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .footer-bar {
+            flex: 1;
+            height: 35px;
+            background: linear-gradient(to right, #f97316, #dc2626, #ec4899);
+            border-radius: 50px;
+        }
+
+        .footer-badge {
+            background: #22d3ee;
+            color: #000;
+            padding: 8px 30px;
+            border-radius: 50px 0 0 50px;
+            font-weight: bold;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 30px;
+            color: #22d3ee;
+            font-size: 0.9em;
+        }
+
+        .footer-subtext {
+            color: #fbbf24;
+            font-size: 0.8em;
+            margin-top: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .header-top {
+                flex-direction: column;
+            }
+
+            .lcars-badge {
+                border-radius: 50px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hlavička LCARS -->
+    <div class="header-lcars">
+        <div class="header-top">
+            <div class="lcars-badge">LCARS 47</div>
+            <div class="lcars-bar"></div>
+        </div>
+        <h1>🎵 STAR TREK MP3 LYRICS EDITOR 🎵</h1>
+        <p class="subtitle">⚡ HVĚZDNÁ FLOTILA - ODDĚLENÍ HUDEBNÍCH OPERACÍ ⚡</p>
+    </div>
+
+    <!-- Upload zóna -->
+    <div class="upload-zone" id="uploadZone">
+        <div class="upload-icon">📤</div>
+        <h2 style="color: #22d3ee; margin-bottom: 10px;">NAHRÁT MP3 SOUBOR</h2>
+        <p style="color: #fde047;">Klikněte nebo přetáhněte MP3 soubor</p>
+        <input type="file" id="fileInput" accept="audio/mpeg">
+    </div>
+
+    <!-- Hlavní kontejner -->
+    <div class="main-container hidden" id="mainContainer">
+        <!-- Levý panel - Přehrávač -->
+        <div class="player-panel">
+            <div class="panel-header">
+                <span style="font-size: 1.5em;">🎵</span>
+                <h2>AUDIO PŘEHRÁVAČ</h2>
+            </div>
+
+            <div class="metadata" id="metadata">
+                <p class="title" id="metaTitle">Název skladby</p>
+                <p class="artist" id="metaArtist">Umělec</p>
+                <p class="album" id="metaAlbum">Album</p>
+                <p class="info" id="metaInfo">2025 • Unknown</p>
+            </div>
+
+            <audio id="audioPlayer"></audio>
+
+            <div class="controls">
+                <button class="play-btn" id="playBtn">▶</button>
+            </div>
+
+            <div class="timeline">
+                <input type="range" id="seekBar" value="0" min="0" max="100" step="0.1">
+                <div class="time-display">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+            </div>
+
+            <button class="btn btn-upload" id="newFileBtn">
+                📤 NAHRÁT NOVÝ SOUBOR
+            </button>
+        </div>
+
+        <!-- Pravý panel - Editor -->
+        <div class="editor-panel">
+            <div class="panel-header">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 1.5em;">✏️</span>
+                    <h2>EDITOR TEXTŮ</h2>
+                </div>
+                <div class="editor-buttons">
+                    <button class="btn btn-download" id="downloadBtn">
+                        💾 TXT
+                    </button>
+                    <button class="btn btn-save" id="saveBtn">
+                        💾 ULOŽIT
+                    </button>
+                </div>
+            </div>
+
+            <textarea id="lyricsEditor" placeholder="Vložte zde text písničky...">// Zde vložte text písničky...
+// Každý řádek na nový řádek
+// Podpora formátování</textarea>
+
+            <div class="instructions">
+                <strong>⚡ INSTRUKCE FLOTILY:</strong>
+                <ul>
+                    <li>Vložte text písničky do editoru</li>
+                    <li>Klikněte na "ULOŽIT" pro export</li>
+                    <li>Otevřete Mp3tag a načtěte své MP3</li>
+                    <li>Přidejte pole UNSYNCEDLYRICS a vložte text</li>
+                    <li>Uložte změny v Mp3tag</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spodní LCARS panel -->
+    <div class="footer-lcars">
+        <div class="footer-bar"></div>
+        <div class="footer-badge">WARP 9.99</div>
+    </div>
+
+    <!-- Footer text -->
+    <div class="footer-text">
+        <p>🖖 Vytvořeno admirálem Claude.AI pro více admirála Jiříka 🖖</p>
+        <p class="footer-subtext">Hvězdná flotila - Oddělení pokročilých technologií</p>
+    </div>
+
+    <script>
+        // Elementy
+        const uploadZone = document.getElementById('uploadZone');
+        const mainContainer = document.getElementById('mainContainer');
+        const fileInput = document.getElementById('fileInput');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playBtn = document.getElementById('playBtn');
+        const seekBar = document.getElementById('seekBar');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const durationDisplay = document.getElementById('duration');
+        const lyricsEditor = document.getElementById('lyricsEditor');
+        const saveBtn = document.getElementById('saveBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const newFileBtn = document.getElementById('newFileBtn');
+
+        // Metadata elementy
+        const metaTitle = document.getElementById('metaTitle');
+        const metaArtist = document.getElementById('metaArtist');
+        const metaAlbum = document.getElementById('metaAlbum');
+        const metaInfo = document.getElementById('metaInfo');
+
+        let isPlaying = false;
+
+        // Upload handling
+        uploadZone.addEventListener('click', () => fileInput.click());
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.style.background = 'rgba(34, 211, 238, 0.2)';
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.style.background = '';
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.style.background = '';
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'audio/mpeg') {
+                handleFile(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type === 'audio/mpeg') {
+                handleFile(file);
+            }
+        });
+
+        function handleFile(file) {
+            const url = URL.createObjectURL(file);
+            audioPlayer.src = url;
+            
+            // Metadata
+            const fileName = file.name.replace('.mp3', '');
+            metaTitle.textContent = fileName;
+            metaArtist.textContent = 'Neznámý umělec';
+            metaAlbum.textContent = 'Neznámé album';
+            metaInfo.textContent = '2025 • Unknown';
+            
+            // Zobrazit hlavní kontejner
+            uploadZone.classList.add('hidden');
+            mainContainer.classList.remove('hidden');
+        }
+
+        // Přehrávač ovládání
+        playBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                audioPlayer.pause();
+                playBtn.textContent = '▶';
+            } else {
+                audioPlayer.play();
+                playBtn.textContent = '⏸';
+            }
+            isPlaying = !isPlaying;
+        });
+
+        audioPlayer.addEventListener('ended', () => {
+            playBtn.textContent = '▶';
+            isPlaying = false;
+        });
+
+        audioPlayer.addEventListener('timeupdate', () => {
+            const current = audioPlayer.currentTime;
+            const duration = audioPlayer.duration;
+            seekBar.value = (current / duration) * 100;
+            currentTimeDisplay.textContent = formatTime(current);
+        });
+
+        audioPlayer.addEventListener('loadedmetadata', () => {
+            durationDisplay.textContent = formatTime(audioPlayer.duration);
+            seekBar.max = 100;
+        });
+
+        seekBar.addEventListener('input', (e) => {
+            const seekTo = (e.target.value / 100) * audioPlayer.duration;
+            audioPlayer.currentTime = seekTo;
+        });
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Uložení textů
+        saveBtn.addEventListener('click', () => {
+            const lyrics = lyricsEditor.value;
+            alert('⚡ PROTOKOL ÚSPĚŠNÝ ⚡\n\nTexty byly připraveny k uložení!\n\nPoznámka: Pro skutečné uložení do MP3 souboru by byla potřeba serverová část nebo použití nástroje jako Mp3tag.\n\nTexty můžete zkopírovat a vložit ručně do Mp3tag do pole UNSYNCEDLYRICS.');
+        });
+
+        // Stažení textů jako TXT
+        downloadBtn.addEventListener('click', () => {
+            const lyrics = lyricsEditor.value;
+            const fileName = metaTitle.textContent || 'lyrics';
+            const blob = new Blob([lyrics], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${fileName}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // Nový soubor
+        newFileBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+    </script>
+</body>
+</html>
